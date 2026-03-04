@@ -1,0 +1,108 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(12px);
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent),
+    rgba(0, 0, 0, 0.7);
+  z-index: 10;
+}
+
+.app-logo {
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-decoration: none;
+  color: #e5e7eb;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.app-nav-link {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: #9ca3af;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.app-nav-link:hover {
+  color: #e5e7eb;
+  border-color: rgba(156, 163, 175, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.app-nav-link-active {
+  color: #e5e7eb;
+  border-color: rgba(56, 189, 248, 0.8);
+  background: radial-gradient(circle at top, rgba(56, 189, 248, 0.22), rgba(15, 23, 42, 0.9));
+  box-shadow: 0 0 0 1px rgba(8, 47, 73, 0.7);
+}
+
+.app-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.page p {
+  color: #9ca3af;
+  margin-bottom: 1.5rem;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.card {
+  display: block;
+  padding: 1.25rem 1.4rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  background: radial-gradient(circle farthest-corner at top left, rgba(59, 130, 246, 0.15), #020617);
+  text-decoration: none;
+  color: #e5e7eb;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 20px 30px -18px rgba(15, 23, 42, 0.9);
+  background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.3), #020617);
+}
+
+.card h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.card p {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
