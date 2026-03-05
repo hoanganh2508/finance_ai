@@ -23,5 +23,15 @@ module FinanceAi
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # CORS: cho phép frontend (Vite dev server) gọi API
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins "http://localhost:5173", "http://127.0.0.1:5173"
+        resource "/api/*",
+          headers: :any,
+          methods: %i[get post options put patch delete]
+      end
+    end
   end
 end
