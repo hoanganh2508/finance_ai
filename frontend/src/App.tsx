@@ -154,7 +154,7 @@ function FinancialAnalysisPage() {
       <h1>Phân tích tài chính doanh nghiệp</h1>
       <p>
         Nhập mã cổ phiếu và một số chỉ số cơ bản. Hệ thống sẽ trả về phân tích tài chính tổng quan
-        (hiện đang dùng dữ liệu minh hoạ từ API mock).
+        do AI tạo dựa trên số liệu bạn nhập.
       </p>
 
       <div className="layout-two-columns">
@@ -311,12 +311,11 @@ function FinancialAnalysisPage() {
           <h2 className="panel-title">Kết quả phân tích</h2>
           {!result && !loading && (
             <p className="muted">
-              Kết quả phân tích sẽ hiển thị tại đây sau khi bạn gửi form. Hiện hệ thống đang sử
-              dụng dữ liệu mock từ API Rails.
+              Kết quả phân tích sẽ hiển thị tại đây sau khi bạn gửi form (phân tích do AI tạo).
             </p>
           )}
 
-          {loading && <p className="muted">Đang gửi dữ liệu tới API mock...</p>}
+          {loading && <p className="muted">Đang phân tích với AI...</p>}
 
           {result && (
             <div className="analysis">

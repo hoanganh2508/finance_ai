@@ -36,3 +36,9 @@ docker-compose --profile with-frontend up
 ```
 
 Lưu ý: trong môi trường Docker/Colima, sửa file trên host có thể vẫn không trigger HMR đúng; khi cần sửa frontend liên tục, ưu tiên dùng quy trình “frontend trên host” ở trên.
+
+---
+
+## Phân tích AI (OpenAI)
+
+Trang **Phân tích tài chính** gọi backend để tạo phân tích bằng OpenAI (GPT). Để dùng phân tích thật (không mock), cấu hình **`OPENAI_API_KEY`** cho backend (ví dụ trong `backend/.env.docker`). Nếu không set, backend trả về kết quả mock.
