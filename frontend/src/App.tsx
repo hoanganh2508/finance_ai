@@ -1,11 +1,12 @@
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom'
 import './App.css'
+import { createFinancialAnalysis, type FinancialAnalysisResponse } from './api/financial'
 
 type NavItem = {
   path: string
   label: string
 }
-
 const navItems: NavItem[] = [
   { path: '/', label: 'Dashboard' },
   { path: '/financial', label: 'Phân tích tài chính' },
@@ -55,10 +56,21 @@ function App() {
 
 function DashboardPage() {
   return (
-    <div className="page">
-      <h1>Finance AI Dashboard</h1>
-      <p>Chọn loại phân tích bạn muốn sử dụng.</p>
-      <div className="card-grid">
+    <div className="page dashboard">
+      <div className="dashboard-intro">
+        <h1>Finance AI</h1>
+        <p>
+          Một nơi để bạn hỏi – hệ thống hỗ trợ phân tích tài chính, cổ phiếu, báo cáo và tin tức
+          theo cùng một phong cách.
+        </p>
+        <ul>
+          <li>Nhập nhanh mã cổ phiếu và số liệu cơ bản.</li>
+          <li>Tóm tắt báo cáo dài thành vài ý chính.</li>
+          <li>Theo dõi tin tức và tác động đến doanh nghiệp.</li>
+        </ul>
+      </div>
+
+      <div className="dashboard-actions">
         {navItems
           .filter((item) => item.path !== '/')
           .map((item) => (
@@ -73,10 +85,291 @@ function DashboardPage() {
 }
 
 function FinancialAnalysisPage() {
+  const [ticker, setTicker] = useState('')
+  const [currency, setCurrency] = useState<'VND' | 'USD'>('VND')
+  const [financials, setFinancials] = useState({
+    revenue: '',
+    net_income: '',
+    gross_margin_pct: '',
+    debt_to_equity: '',
+    roe_pct: '',
+    roa_pct: '',
+    pe: '',
+    pb: '',
+    revenue_growth_3y_pct: '',
+    net_income_growth_3y_pct: '',
+    notes: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<FinancialAnalysisResponse | null>(null)
+
+  const handleChange =
+    (field: keyof typeof financials) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFinancials((prev) => ({ ...prev, [field]: event.target.value }))
+    }
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setError(null)
+
+    if (!ticker.trim()) {
+      setError('Vui lòng nhập mã cổ phiếu.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const payload = {
+        ticker: ticker.trim(),
+        currency,
+        financials: {
+          revenue: Number(financials.revenue) || null,
+          net_income: Number(financials.net_income) || null,
+          gross_margin_pct: Number(financials.gross_margin_pct) || null,
+          debt_to_equity: Number(financials.debt_to_equity) || null,
+          roe_pct: Number(financials.roe_pct) || null,
+          roa_pct: Number(financials.roa_pct) || null,
+          pe: Number(financials.pe) || null,
+          pb: Number(financials.pb) || null,
+          revenue_growth_3y_pct: Number(financials.revenue_growth_3y_pct) || null,
+          net_income_growth_3y_pct: Number(financials.net_income_growth_3y_pct) || null,
+          notes: financials.notes || null,
+        },
+      }
+
+      const response = await createFinancialAnalysis(payload)
+      setResult(response)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Đã xảy ra lỗi không xác định.'
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="page">
       <h1>Phân tích tài chính doanh nghiệp</h1>
-      <p>Form và kết quả AI sẽ được bổ sung ở bước kế tiếp.</p>
+      <p>
+        Nhập mã cổ phiếu và một số chỉ số cơ bản. Hệ thống sẽ trả về phân tích tài chính tổng quan
+        (hiện đang dùng dữ liệu minh hoạ từ API mock).
+      </p>
+
+      <div className="layout-two-columns">
+        <section className="panel">
+          <h2 className="panel-title">Thông tin đầu vào</h2>
+          <form className="form" onSubmit={handleSubmit}>
+            <div className="form-row">
+              <div className="form-field">
+                <label htmlFor="ticker">Mã cổ phiếu</label>
+                <input
+                  id="ticker"
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                  placeholder="Ví dụ: FPT, VNM..."
+                  autoComplete="off"
+                  required
+                />
+              </div>
+              <div className="form-field">
+                <label htmlFor="currency">Đơn vị tiền tệ</label>
+                <select
+                  id="currency"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value as 'VND' | 'USD')}
+                >
+                  <option value="VND">VND</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-grid">
+              <div className="form-field">
+                <label>Doanh thu (12 tháng)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.revenue}
+                  onChange={handleChange('revenue')}
+                  placeholder="Ví dụ: 5000000"
+                />
+              </div>
+              <div className="form-field">
+                <label>Lợi nhuận ròng</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.net_income}
+                  onChange={handleChange('net_income')}
+                  placeholder="Ví dụ: 700000"
+                />
+              </div>
+              <div className="form-field">
+                <label>Biên lợi nhuận gộp (%)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.gross_margin_pct}
+                  onChange={handleChange('gross_margin_pct')}
+                  placeholder="Ví dụ: 40.5"
+                />
+              </div>
+              <div className="form-field">
+                <label>Nợ / Vốn chủ sở hữu</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.debt_to_equity}
+                  onChange={handleChange('debt_to_equity')}
+                  placeholder="Ví dụ: 0.4"
+                />
+              </div>
+              <div className="form-field">
+                <label>ROE (%)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.roe_pct}
+                  onChange={handleChange('roe_pct')}
+                  placeholder="Ví dụ: 18.2"
+                />
+              </div>
+              <div className="form-field">
+                <label>ROA (%)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.roa_pct}
+                  onChange={handleChange('roa_pct')}
+                  placeholder="Ví dụ: 9.5"
+                />
+              </div>
+              <div className="form-field">
+                <label>P/E</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.pe}
+                  onChange={handleChange('pe')}
+                  placeholder="Ví dụ: 20.1"
+                />
+              </div>
+              <div className="form-field">
+                <label>P/B</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.pb}
+                  onChange={handleChange('pb')}
+                  placeholder="Ví dụ: 3.2"
+                />
+              </div>
+              <div className="form-field">
+                <label>Tăng trưởng doanh thu 3 năm (%)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.revenue_growth_3y_pct}
+                  onChange={handleChange('revenue_growth_3y_pct')}
+                  placeholder="Ví dụ: 15"
+                />
+              </div>
+              <div className="form-field">
+                <label>Tăng trưởng lợi nhuận ròng 3 năm (%)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={financials.net_income_growth_3y_pct}
+                  onChange={handleChange('net_income_growth_3y_pct')}
+                  placeholder="Ví dụ: 12"
+                />
+              </div>
+            </div>
+
+            <div className="form-field">
+              <label>Ghi chú (tùy chọn)</label>
+              <textarea
+                rows={3}
+                value={financials.notes}
+                onChange={handleChange('notes')}
+                placeholder="Bạn có thể ghi thêm bối cảnh, sự kiện đặc biệt, kế hoạch doanh nghiệp..."
+              />
+            </div>
+
+            {error && <div className="form-error">{error}</div>}
+
+            <button className="primary-button" type="submit" disabled={loading}>
+              {loading ? 'Đang phân tích...' : 'Phân tích với AI'}
+            </button>
+          </form>
+        </section>
+
+        <section className="panel">
+          <h2 className="panel-title">Kết quả phân tích</h2>
+          {!result && !loading && (
+            <p className="muted">
+              Kết quả phân tích sẽ hiển thị tại đây sau khi bạn gửi form. Hiện hệ thống đang sử
+              dụng dữ liệu mock từ API Rails.
+            </p>
+          )}
+
+          {loading && <p className="muted">Đang gửi dữ liệu tới API mock...</p>}
+
+          {result && (
+            <div className="analysis">
+              <div className="analysis-header">
+                <span className="badge">Financial</span>
+                <span className="ticker">{result.ticker}</span>
+              </div>
+
+              <section className="analysis-section">
+                <h3>Tổng quan</h3>
+                <p>{result.analysis.overview}</p>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Điểm mạnh</h3>
+                <ul>
+                  {result.analysis.strengths.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Điểm yếu</h3>
+                <ul>
+                  {result.analysis.weaknesses.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Rủi ro tài chính</h3>
+                <ul>
+                  {result.analysis.risks.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Chất lượng dòng tiền</h3>
+                <p>{result.analysis.cashflow_quality}</p>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Kết luận tổng thể</h3>
+                <p>{result.analysis.conclusion}</p>
+              </section>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }

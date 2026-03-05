@@ -3,42 +3,45 @@ version: "3.9"
 services:
   db:
     image: postgres:16
+    container_name: finance_ai_db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: finance_ai_development
     ports:
       - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
 
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile.dev
+      context: ./backend
+    container_name: finance_ai_backend
+    env_file:
+      - ./backend/.env.docker
     environment:
       RAILS_ENV: development
-      DATABASE_URL: postgres://postgres:password@db:5432/finance_ai_development
-    volumes:
-      - .:/app
+      DATABASE_URL: postgres://postgres:postgres@db:5432/finance_ai_development
     depends_on:
       - db
     ports:
       - "3000:3000"
-    tty: true
-    stdin_open: true
 
   frontend:
-    image: node:22-alpine
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
-    ports:
-      - "5173:5173"
+    build:
+      context: ./frontend
+    container_name: finance_ai_frontend
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "500"
     depends_on:
       - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
-  db-data:
-
+  db_data:

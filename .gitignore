@@ -37,6 +37,19 @@
 /frontend/node_modules
 /frontend/dist
 
+# Backend env (tránh commit mật khẩu / biến môi trường)
+/backend/.env*
+# Backend secret key (Rails credentials)
+/backend/config/master.key
+
+# Backend runtime: log, tmp, storage (Rails + Bootsnap cache)
+/backend/log/*
+/backend/tmp/*
+/backend/storage/*
+!/backend/tmp/.keep
+!/backend/log/.keep
+!/backend/storage/.keep
+
 # Misc
 .DS_Store
 npm-debug.log*
