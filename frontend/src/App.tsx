@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom'
 import './App.css'
 import { createFinancialAnalysis, type FinancialAnalysisResponse } from './api/financial'
+import { createStockAnalysis, type StockAnalysisResponse } from './api/stock'
 
 type NavItem = {
   path: string
@@ -374,10 +375,211 @@ function FinancialAnalysisPage() {
 }
 
 function StockAnalysisPage() {
+  const [ticker, setTicker] = useState('')
+  const [horizon, setHorizon] = useState<'short' | 'medium' | 'long'>('medium')
+  const [riskProfile, setRiskProfile] = useState<'low' | 'medium' | 'high'>('medium')
+  const [currentPrice, setCurrentPrice] = useState('')
+  const [targetPrice, setTargetPrice] = useState('')
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<StockAnalysisResponse | null>(null)
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setError(null)
+
+    if (!ticker.trim()) {
+      setError('Vui lòng nhập mã cổ phiếu.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const payload = {
+        ticker: ticker.trim().toUpperCase(),
+        horizon,
+        risk_profile: riskProfile,
+        current_price: Number(currentPrice) || null,
+        target_price: Number(targetPrice) || null,
+        notes: notes || null,
+      }
+
+      const response = await createStockAnalysis(payload)
+      setResult(response)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Đã xảy ra lỗi không xác định.'
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="page">
       <h1>Phân tích cổ phiếu</h1>
-      <p>Form và kết quả AI sẽ được bổ sung ở bước kế tiếp.</p>
+      <p>
+        Nhập mã cổ phiếu và một vài thông tin cơ bản về kỳ vọng của bạn. Hệ thống sẽ trả về gợi ý
+        luận điểm đầu tư, catalyst, rủi ro và kịch bản giá (hiện đang dùng dữ liệu minh hoạ từ API
+        Rails).
+      </p>
+
+      <div className="layout-two-columns">
+        <section className="panel">
+          <h2 className="panel-title">Thiết lập ý tưởng giao dịch</h2>
+          <form className="form" onSubmit={handleSubmit}>
+            <div className="form-row">
+              <div className="form-field">
+                <label htmlFor="stock-ticker">Mã cổ phiếu</label>
+                <input
+                  id="stock-ticker"
+                  value={ticker}
+                  onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                  placeholder="Ví dụ: FPT, MWG..."
+                  autoComplete="off"
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="horizon">Khung thời gian</label>
+                <select
+                  id="horizon"
+                  value={horizon}
+                  onChange={(e) => setHorizon(e.target.value as typeof horizon)}
+                >
+                  <option value="short">Ngắn hạn (vài tuần - 3 tháng)</option>
+                  <option value="medium">Trung hạn (3-12 tháng)</option>
+                  <option value="long">Dài hạn (&gt; 1 năm)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-field">
+                <label htmlFor="risk-profile">Mức chấp nhận rủi ro</label>
+                <select
+                  id="risk-profile"
+                  value={riskProfile}
+                  onChange={(e) => setRiskProfile(e.target.value as typeof riskProfile)}
+                >
+                  <option value="low">Thấp (ưu tiên an toàn vốn)</option>
+                  <option value="medium">Trung bình</option>
+                  <option value="high">Cao (chấp nhận biến động mạnh)</option>
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>Giá hiện tại (tùy chọn)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={currentPrice}
+                  onChange={(e) => setCurrentPrice(e.target.value)}
+                  placeholder="Ví dụ: 95000"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-field">
+                <label>Giá mục tiêu (tùy chọn)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={targetPrice}
+                  onChange={(e) => setTargetPrice(e.target.value)}
+                  placeholder="Ví dụ: 115000"
+                />
+              </div>
+            </div>
+
+            <div className="form-field">
+              <label>Ghi chú thêm (tùy chọn)</label>
+              <textarea
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Bạn có thể thêm luận điểm riêng, thông tin doanh nghiệp, sự kiện sắp tới..."
+              />
+            </div>
+
+            {error && <div className="form-error">{error}</div>}
+
+            <button className="primary-button" type="submit" disabled={loading}>
+              {loading ? 'Đang phân tích...' : 'Phân tích ý tưởng với AI'}
+            </button>
+          </form>
+        </section>
+
+        <section className="panel">
+          <h2 className="panel-title">Kết quả phân tích</h2>
+          {!result && !loading && (
+            <p className="muted">
+              Kết quả phân tích cổ phiếu sẽ hiển thị tại đây sau khi bạn gửi form. Hiện hệ thống
+              đang sử dụng dữ liệu mock từ API Rails.
+            </p>
+          )}
+
+          {loading && <p className="muted">Đang phân tích ý tưởng giao dịch...</p>}
+
+          {result && (
+            <div className="analysis">
+              <div className="analysis-header">
+                <span className="badge">Stock</span>
+                <span className="ticker">{result.ticker}</span>
+              </div>
+
+              <section className="analysis-section">
+                <h3>Luận điểm đầu tư</h3>
+                <ul>
+                  {result.analysis.investment_thesis.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Catalyst / Động lực tăng giá</h3>
+                <ul>
+                  {result.analysis.catalysts.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Rủi ro chính</h3>
+                <ul>
+                  {result.analysis.risks.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Kịch bản giá</h3>
+                <ul>
+                  <li>
+                    <strong>Kịch bản tích cực (bull):</strong> {result.analysis.scenarios.bull}
+                  </li>
+                  <li>
+                    <strong>Kịch bản cơ sở (base):</strong> {result.analysis.scenarios.base}
+                  </li>
+                  <li>
+                    <strong>Kịch bản tiêu cực (bear):</strong> {result.analysis.scenarios.bear}
+                  </li>
+                </ul>
+              </section>
+
+              <section className="analysis-section">
+                <h3>Nhận xét về định giá</h3>
+                <p>{result.analysis.valuation_comment}</p>
+              </section>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }
